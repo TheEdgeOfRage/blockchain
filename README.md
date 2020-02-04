@@ -1,65 +1,48 @@
-# Learn Blockchains by Building One
+# Blockchain 101
 
-[![Build Status](https://travis-ci.org/dvf/blockchain.svg?branch=master)](https://travis-ci.org/dvf/blockchain)
-
-This is the source code for my post on [Building a Blockchain](https://medium.com/p/117428612f46). 
+Simple blockchain written in python
 
 ## Installation
 
-1. Make sure [Python 3.6+](https://www.python.org/downloads/) is installed. 
-2. Install [pipenv](https://github.com/kennethreitz/pipenv). 
+1. Make sure [Python 3.6+](https://www.python.org/downloads/) is installed.
+2. Install [poetry](https://github.com/sdispater/poetry).
+3. Install requirements
+```
+$ poetry install
+```
 
-```
-$ pip install pipenv 
-```
-3. Install requirements  
-```
-$ pipenv install 
-``` 
+4. Copy `.env.example` to `.env`
 
-4. Run the server:
-    * `$ pipenv run python blockchain.py` 
-    * `$ pipenv run python blockchain.py -p 5001`
-    * `$ pipenv run python blockchain.py --port 5002`
-    
+5. Start some nodes:
+	* `$ poetry run flask run -p 5000`
+	* `$ poetry run flask run -p 5001`
+
 ## Docker
 
 Another option for running this blockchain program is to use Docker.  Follow the instructions below to create a local Docker container:
 
-1. Clone this repository
-2. Build the docker container
+1. Build the docker image
 
 ```
-$ docker build -t blockchain .
+$ docker-compose build
 ```
 
-3. Run the container
+2. Run the nodes
 
 ```
-$ docker run --rm -p 80:5000 blockchain
+$ docker-compose up -d
 ```
 
-4. To add more instances, vary the public port number before the colon:
+4. To add more nodes, add a new service to the `docker-compose.yml` file
+and adjust the port number.
 
+```yaml
+node2:
+	build: .
+	ports:
+		- 5002:80
 ```
-$ docker run --rm -p 81:5000 blockchain
-$ docker run --rm -p 82:5000 blockchain
-$ docker run --rm -p 83:5000 blockchain
-```
 
-## Installation (C# Implementation)
+## Credits
 
-1. Install a free copy of Visual Studio IDE (Community Edition):
-https://www.visualstudio.com/vs/
-
-2. Once installed, open the solution file (BlockChain.sln) using the File > Open > Project/Solution menu options within Visual Studio.
-
-3. From within the "Solution Explorer", right click the BlockChain.Console project and select the "Set As Startup Project" option.
-
-4. Click the "Start" button, or hit F5 to run. The program executes in a console window, and is controlled via HTTP with the same commands as the Python version.
-
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
+[dvf](github.com/dvf/) for the original blockchain code
