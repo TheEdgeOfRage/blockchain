@@ -1,15 +1,13 @@
-FROM python:3.6-alpine
+FROM python:3.8-alpine
 
 WORKDIR /app
+EXPOSE 80
+ENV FLASK_APP=run:app \
+	FLASK_ENV=production \
+	PYTHONUNBUFFERED=1
+CMD ["flask", "run", "-p", "80", "-h", "0.0.0.0"]
 
-# Install dependencies.
-ADD requirements.txt /app
-RUN cd /app && \
-    pip install -r requirements.txt
+ADD requirements.txt run.py ./
+RUN pip install -r requirements.txt
 
-# Add actual source code.
-ADD blockchain.py /app
-
-EXPOSE 5000
-
-CMD ["python", "blockchain.py", "--port", "5000"]
+ADD blockchain/ ./blockchain/
