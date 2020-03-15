@@ -8,6 +8,8 @@
 
 import hashlib
 import itertools
+import json
+from decimal import Decimal
 from multiprocessing import (
 	cpu_count,
 	Pool,
@@ -15,43 +17,25 @@ from multiprocessing import (
 	Queue
 )
 
-from flask import current_app, json
+
+class DecimalJsonEncoder(json.JSONEncoder):
+	def default(self, obj):
+		if isinstance(obj, Decimal):
+			return float(obj)
+		return super(DecimalJsonEncoder, self).default(obj)
 
 
-def dumps(*args, **kwargs):
-	if len(args) == 1:
-		data = args[0]
-	else:
-		data = args
-
+def dumps(*data, **kwargs):
 	return json.dumps(
 		data,
-		use_decimal=True,
+		cls=DecimalJsonEncoder,
 		**kwargs,
-	)
-
-
-def jsonify(*args, **kwargs):
-	indent = None
-	separators = (",", ":")
-
-	if current_app.config["JSONIFY_PRETTYPRINT_REGULAR"] or current_app.debug:
-		indent = 2
-		separators = (", ", ": ")
-
-	return current_app.response_class(
-		dumps(
-			*args,
-			indent=indent,
-			separators=separators,
-		) + "\n",
-		mimetype=current_app.config["JSONIFY_MIMETYPE"],
 	)
 
 
 def do_pooled_pow(last_proof, last_hash, difficulty):
 	queue = Queue()
-	with Pool() as p:
+	with Pool(1) as p:
 		result = p.starmap_async(pool_worker, ((
 			queue,
 			i,

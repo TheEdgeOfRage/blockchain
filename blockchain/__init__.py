@@ -2,17 +2,34 @@
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
 
-from flask import Flask
+from uuid import uuid4
+
+from fastapi import FastAPI
+
+from .blockchain import Blockchain
+
+blockchain = Blockchain()
+identifier = str(uuid4()).replace('-', '')
 
 
-def init_blueprints(app):
-	from .app import app as app_bp
-	app.register_blueprint(app_bp, url_prefix='/')
+def init_routers(app):
+	from .routers import misc
+	app.include_router(
+		misc.router,
+		prefix='',
+		tags=['misc'],
+	)
+
+	from .routers import nodes
+	app.include_router(
+		nodes.router,
+		prefix='/nodes',
+		tags=['nodes'],
+	)
 
 
-def create_app(package_name=__name__):
-	app = Flask(package_name)
-
-	init_blueprints(app)
+def create_app():
+	app = FastAPI()
+	init_routers(app)
 
 	return app

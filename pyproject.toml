@@ -6,9 +6,9 @@ authors = ["Pavle Portic <pavle.portic@tilda.center>"]
 
 [tool.poetry.dependencies]
 python = "^3.8"
-flask = "^1.1.1"
 requests = "^2.22.0"
-simplejson = "^3.17.0"
+fastapi = {extras = ["uvicorn"], version = "^0.48.0"}
+uvicorn = "^0.11.2"
 
 [tool.poetry.dev-dependencies]
 python-dotenv = "^0.10.5"

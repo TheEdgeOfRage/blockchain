@@ -1,34 +1,46 @@
 #!/bin/bash
 
-function register_nodes() {
-	http POST localhost:5001/nodes/register \
-		nodes:='["http://localhost:5002"]'
+set -e
 
-	http POST localhost:5002/nodes/register \
-		nodes:='["http://localhost:5001"]'
+function register_nodes() {
+	from=$1
+	to_list=$2
+	for to in $to_list; do
+		http POST localhost:500$from/nodes/register \
+			nodes:="[\"http://node$to\"]"
+	done
 }
 
 function synchronise_nodes() {
+	http POST localhost:5000/nodes/resolve
 	http POST localhost:5001/nodes/resolve
-	http POST localhost:5002/nodes/resolve
 }
 
+NODE0_ID=$(http localhost:5000/identifier | jq -r ".identifier")
 NODE1_ID=$(http localhost:5001/identifier | jq -r ".identifier")
-NODE2_ID=$(http localhost:5002/identifier | jq -r ".identifier")
 
-register_nodes >/dev/null
+register_nodes "0" "1 3 4"
+register_nodes "1" "0 5"
+register_nodes "2" "5"
+register_nodes "3" "0 4"
+register_nodes "4" "0 3 5"
+register_nodes "5" "1 2 4"
 
-# Mine a few initial blocks
-http POST localhost:5001/mine
-http POST localhost:5001/mine
-synchronise_nodes >/dev/null
+# # Mine a few initial blocks
+http POST localhost:5000/mine
+http POST localhost:5000/mine
+http POST localhost:5001/nodes/resolve
+http POST localhost:5003/nodes/resolve
+http POST localhost:5005/nodes/resolve
+http POST localhost:5002/nodes/resolve
+# synchronise_nodes >/dev/null
 
-http POST localhost:5001/transactions sender=$NODE1_ID recipient=$NODE2_ID amount=1.3
-http POST localhost:5001/mine
-synchronise_nodes >/dev/null
+# http POST localhost:5000/transactions sender=$NODE0_ID recipient=$NODE1_ID amount=1.3
+# http POST localhost:5000/mine
+# synchronise_nodes >/dev/null
 
-http localhost:5001/nodes/$NODE1_ID/balance
-http localhost:5001/nodes/$NODE2_ID/balance
+# http localhost:5000/nodes/$NODE0_ID/balance
+# http localhost:5000/nodes/$NODE1_ID/balance
 
-echo node1: $NODE1_ID
-echo node2: $NODE2_ID
+# echo node0: $NODE0_ID
+# echo node1: $NODE1_ID

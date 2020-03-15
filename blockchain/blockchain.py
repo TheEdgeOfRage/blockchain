@@ -7,14 +7,14 @@ import requests
 
 from .utils import dumps, do_process_pow, valid_proof
 
-DIFFICULTY = 24
+DIFFICULTY = 8
 
 
 class Blockchain:
 	def __init__(self):
 		self.current_transactions = []
 		self.chain = []
-		self.nodes = set()
+		self.peers = set()
 
 		# Create the genesis block
 		self.new_block(previous_hash='1', proof=100)
@@ -28,10 +28,10 @@ class Blockchain:
 
 		parsed_url = urlparse(address)
 		if parsed_url.netloc:
-			self.nodes.add(parsed_url.netloc)
+			self.peers.add(parsed_url.netloc)
 		elif parsed_url.path:
 			# Accepts an URL without scheme like '192.168.0.5:5000'.
-			self.nodes.add(parsed_url.path)
+			self.peers.add(parsed_url.path)
 		else:
 			raise ValueError('Invalid URL')
 
@@ -57,7 +57,7 @@ class Blockchain:
 				return False
 
 			# Check that the Proof of Work is correct
-			if not valid_proof(last_block['proof'], block['proof'], last_block_hash):
+			if not valid_proof(last_block['proof'], block['proof'], last_block_hash, DIFFICULTY):
 				return False
 
 			last_block = block
@@ -73,14 +73,13 @@ class Blockchain:
 		:return: True if our chain was replaced, False if not
 		"""
 
-		neighbours = self.nodes
 		new_chain = None
 
 		# We're only looking for chains longer than ours
 		max_length = len(self.chain)
 
-		# Grab and verify the chains from all the nodes in our network
-		for node in neighbours:
+		# Grab and verify the chains from all the peers in our network
+		for node in self.peers:
 			response = requests.get(f'http://{node}/chain')
 
 			if response.status_code == 200:
@@ -121,7 +120,18 @@ class Blockchain:
 
 		return block
 
-	def new_transaction(self, sender, recipient, amount):
+	def broadcast_transaction(self, transaction):
+		for node in self.peers:
+			response = requests.post(
+				f'http://{node}/transactions',
+				data=dumps(transaction, separators=(",", ":")),
+				headers={'content-type': 'application/json'},
+			)
+
+			if response.status_code != 202:
+				print(f'Failed to send transaction to node {node}', response)
+
+	def new_transaction(self, sender, recipient, amount, timestamp=None, mine=False):
 		"""
 		Creates a new transaction to go into the next mined Block
 
@@ -130,13 +140,17 @@ class Blockchain:
 		:param amount: Amount
 		:return: The index of the Block that will hold this transaction
 		"""
-		self.current_transactions.append({
+		transaction = {
 			'sender': sender,
 			'recipient': recipient,
 			'amount': amount,
-		})
-
-		return self.last_block['index'] + 1
+			'timestamp': timestamp or time(),
+		}
+		if transaction not in self.current_transactions:
+			self.current_transactions.append(transaction)
+			print(f'added transaction to list {mine}')
+			if not mine:
+				self.broadcast_transaction(transaction)
 
 	@property
 	def last_block(self):

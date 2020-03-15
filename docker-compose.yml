@@ -2,10 +2,51 @@ version: '3'
 services:
   node0:
     build: .
+    image: blockchain
     ports:
       - 5000:80
 
   node1:
-    build: .
+    image: blockchain
     ports:
       - 5001:80
+
+  node2:
+    image: blockchain
+    ports:
+      - 5002:80
+
+  node3:
+    image: blockchain
+    ports:
+      - 5003:80
+
+  node4:
+    image: blockchain
+    ports:
+      - 5004:80
+
+  node5:
+    image: blockchain
+    ports:
+      - 5005:80
+
+  # node6:
+    # image: blockchain
+    # ports:
+      # - 5006:80
+
+  # node7:
+    # image: blockchain
+    # ports:
+      # - 5007:80
+
+  # node8:
+    # image: blockchain
+    # ports:
+      # - 5008:80
+
+  # node9:
+    # image: blockchain
+    # ports:
+      # - 5009:80
